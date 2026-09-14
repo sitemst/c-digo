@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Oficina de Mapas - FF</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-main: #0d0e12;
+            --bg-card: #16181f;
+            --bg-hover: #1f222c;
+            --accent: #ff9900;
+            --text-primary: #ffffff;
+            --text-secondary: #9da4b4;
+            --border-color: #262933;
+            --success: #2ecc71;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ===== PROTEÇÃO CONTRA CÓPIA MANUAL ===== */
+        body, body * {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        input, textarea {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: fixed;
+            overscroll-behavior: none;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            font-size: 13px;
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(13, 14, 18, 0.95);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 50;
+        }
+
+        .header-title {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+        .header-title small {
+            display: block;
+            margin-top: 3px;
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 0.2px;
+        }
+
+        .menu-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .menu-btn:hover {
+            background: var(--bg-hover);
+        }
+
+        /* ===== CONTEÚDO PRINCIPAL ===== */
+        .main-content {
+            flex: 1;
+            overflow: hidden;
+            padding: 12px 12px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .maps-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow: hidden;
+        }
+
+        .mapa {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .mapa h2 {
+            font-size: 13.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 3px;
+        }
+
+        .mapa .sub {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            line-height: 1.35;
+        }
+
+        .map-details-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            font-size: 10.5px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 6px 8px;
+            border-radius: 7px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            flex: 1;
+        }
+
+        .map-details-info span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .map-details-info i {
+            color: var(--accent);
+            width: 12px;
+            text-align: center;
+            font-size: 10px;
+        }
+
+        .actions-row {
+            display: flex;
+            gap: 7px;
+            margin-top: auto;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 7px;
+            font-size: 11.5px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-copy {
+            background: #5b9bd5;
+            color: #fff;
+        }
+
+        .btn-copy:hover { background: #4a8bc2; }
+        .btn-copy.copied { background: var(--success); }
+
+        .btn-info {
+            background: #232733;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-info:hover {
+            background: #2a303d;
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            flex: 1;
+        }
+
+        .empty-state.show {
+            display: flex;
+        }
+
+        .empty-state i {
+            font-size: 28px;
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* ===== SEARCH ===== */
+        .search-fixed-bottom {
+            flex-shrink: 0;
+            background: rgba(13, 14, 18, 0.96);
+            border-top: 1px solid var(--border-color);
+            padding: 10px 12px 14px;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 11px 16px 11px 38px;
+            border-radius: 25px;
+            color: #fff;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-input::placeholder {
+            color: #6b7385;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.12);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7385;
+            font-size: 13px;
+            pointer-events: none;
+        }
+
+        /* ===== SIDE MENU (DIREITA) ===== */
+        .side-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+
+        .side-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .side-menu {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 280px;
+            max-width: 85%;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border-color);
+            z-index: 210;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.4);
+        }
+
+        .side-menu.open {
+            transform: translateX(0);
+        }
+
+        .side-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .side-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .side-close {
+            width: 34px;
+            height: 34px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .side-close:hover {
+            background: var(--bg-hover);
+            color: #fff;
+        }
+
+        .side-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .side-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 13px 14px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 13.5px;
+            font-weight: 600;
+            font-family: inherit;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.2s;
+            text-decoration: none;
+        }
+
+        .side-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .side-item i {
+            width: 20px;
+            text-align: center;
+            color: var(--accent);
+            font-size: 15px;
+        }
+
+
+        /* ===== REDES SOCIAIS ===== */
+        .social-section-title {
+            margin: 18px 8px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .social-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 13px 14px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 13.5px;
+            font-weight: 600;
+            font-family: inherit;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.2s;
+            text-decoration: none;
+        }
+
+        .social-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .social-item i {
+            width: 24px;
+            text-align: center;
+            color: var(--accent);
+            font-size: 19px;
+        }
+
+        .social-item.disabled {
+            opacity: 0.65;
+        }
+
+        .social-unavailable {
+            margin: 4px 8px 0;
+            padding: 9px 10px;
+            background: rgba(255, 153, 0, 0.08);
+            border: 1px solid rgba(255, 153, 0, 0.18);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 10.5px;
+            line-height: 1.35;
+            display: none;
+        }
+
+        .social-unavailable.show {
+            display: block;
+        }
+
+        /* ===== MODAL ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.72);
+            backdrop-filter: blur(4px);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.22s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transform: translateY(10px);
+            transition: transform 0.25s ease;
+        }
+
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 12px;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        #modalList {
+            list-style: none;
+            font-size: 12.5px;
+            color: var(--text-secondary);
+        }
+
+        #modalList li {
+            padding: 7px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        #modalList li:last-child { border-bottom: none; }
+
+        #modalList li i {
+            color: var(--accent);
+            margin-top: 2px;
+            font-size: 11px;
+        }
+
+        .btn-fechar-modal {
+            width: 100%;
+            margin-top: 14px;
+            padding: 10px;
+            background: #232733;
+            color: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        /* TOAST */
+        #toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(12px);
+            background: #232733;
+            color: #fff;
+            border: 1px solid var(--border-color);
+            padding: 11px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 400;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-title">
+        <div>ＭＯＲＥＮＯ</div>
+        <small>UID 6538678304</small>
+    </div>
+    <button class="menu-btn" onclick="abrirMenu()" aria-label="Menu">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+</div>
+
+<!-- CONTEÚDO -->
+<div class="main-content">
+    <div class="maps-list" id="mapsList">
+        <!-- MAPA 1 -->
+        <div class="mapa searchable-item" data-nome="confronto 4x4">
+            <h2>CONFRONTO 4X4</h2>
+            <div class="sub">Mapa focado para partidas de squad completo e treino de trocação.</div>
+            <div class="map-details-info">
+                <span><i class="fa-regular fa-calendar"></i> Criado em: 18/04/2024</span>
+                <span><i class="fa-solid fa-star"></i> Inscrições: 756.434</span>
+                <span><i class="fa-solid fa-heart"></i> Curtidas: 1.089.053</span>
+                <span><i class="fa-solid fa-rotate"></i> Atualizações frequentes</span>
+            </div>
+            <div class="actions-row">
+                <button class="btn btn-copy" onclick="copiarCodigo(this, '#D00A74')">
+                    <i class="fa-regular fa-copy"></i> Copiar
+                </button>
+                <button class="btn btn-info" onclick="abrirInfo('CONFRONTO 4X4', ['Proteção contra bugadores no muro', 'Limite de parede de gel: 2', '14 Rodadas', 'Somente armas de X1 disponíveis na loja', 'Kit médico, inalador, kit de reparo e gel infinitos'])">
+                    <i class="fa-solid fa-circle-info"></i> Detalhes
+                </button>
+            </div>
+        </div>
+
+        <!-- MAPA 2 -->
+        <div class="mapa searchable-item" data-nome="confronto 2x2">
+            <h2>CONFRONTO 2X2</h2>
+            <div class="sub">Ideal para treino em dupla, sincronia e movimentação.</div>
+            <div class="map-details-info">
+                <span><i class="fa-regular fa-calendar"></i> Criado em: 15/05/2024</span>
+                <span><i class="fa-solid fa-star"></i> Inscrições: 282.833</span>
+                <span><i class="fa-solid fa-heart"></i> Curtidas: 432.118</span>
+                <span><i class="fa-solid fa-rotate"></i> Atualizações frequentes</span>
+            </div>
+            <div class="actions-row">
+                <button class="btn btn-copy" onclick="copiarCodigo(this, '#B00A84')">
+                    <i class="fa-regular fa-copy"></i> Copiar
+                </button>
+                <button class="btn btn-info" onclick="abrirInfo('CONFRONTO 2X2', ['Proteção contra bugadores no muro', 'Limite de parede de gel: 2', '14 Rodadas', 'Somente armas de X1 disponíveis na loja', 'Kit médico, inalador, kit de reparo e gel infinitos'])">
+                    <i class="fa-solid fa-circle-info"></i> Detalhes
+                </button>
+            </div>
+        </div>
+
+        <!-- MAPA 3 -->
+        <div class="mapa searchable-item" data-nome="confronto 1x1">
+            <h2>CONFRONTO 1X1</h2>
+            <div class="sub">Arena fechada para duelos diretos e X1 dos crias.</div>
+            <div class="map-details-info">
+                <span><i class="fa-regular fa-calendar"></i> Criado em: 12/12/2024</span>
+                <span><i class="fa-solid fa-star"></i> Inscrições: 367.461</span>
+                <span><i class="fa-solid fa-heart"></i> Curtidas: 432.118</span>
+                <span><i class="fa-solid fa-rotate"></i> Atualizações frequentes</span>
+            </div>
+            <div class="actions-row">
+                <button class="btn btn-copy" onclick="copiarCodigo(this, '#2A00J4')">
+                    <i class="fa-regular fa-copy"></i> Copiar
+                </button>
+                <button class="btn btn-info" onclick="abrirInfo('CONFRONTO 1X1', ['Proteção contra bugadores no muro', 'Limite de parede de gel: 2', '14 Rodadas', 'Somente armas de X1 disponíveis na loja', 'Kit médico, inalador, kit de reparo e gel infinitos'])">
+                    <i class="fa-solid fa-circle-info"></i> Detalhes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div class="empty-state" id="emptyState">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <p>Nenhum resultado encontrado</p>
+    </div>
+</div>
+
+<!-- SEARCH -->
+<div class="search-fixed-bottom">
+    <div class="search-container">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar mapas..." oninput="filtrarConteudo()" autocomplete="off">
+    </div>
+</div>
+
+<!-- SIDE MENU -->
+<div class="side-overlay" id="sideOverlay" onclick="fecharMenu()"></div>
+<div class="side-menu" id="sideMenu">
+    <div class="side-header">
+        <h3>Menu</h3>
+        <button class="side-close" onclick="fecharMenu()">×</button>
+    </div>
+    <div class="side-body" id="sideBody">
+        <button class="side-item" onclick="abrirSobreMapa()">
+            <i class="fa-solid fa-map"></i>
+            <span>SOBRE O MAPA</span>
+        </button>
+        <button class="side-item" onclick="abrirInstagramFeedback()">
+            <i class="fa-solid fa-comment-dots"></i>
+            <span>SUGESTÕES E FEEDBACK</span>
+        </button>
+
+        <button class="side-item" onclick="abrirRedesSociais()">
+            <i class="fa-solid fa-share-nodes"></i>
+            <span>MINHAS REDES SOCIAIS</span>
+        </button>
+    </div>
+</div>
+
+<!-- MODAL SOBRE O MAPA -->
+<div id="modalSobreMapa" class="modal">
+    <div class="modal-content">
+        <h3>SOBRE O MAPA</h3>
+        <div style="font-size: 12.5px; color: var(--text-secondary); max-height: none; overflow-y: visible; padding-right: 4px;">
+            <p style="margin-bottom: 12px;">Este mapa foi criado para oferecer partidas equilibradas, competitivas e divertidas, onde todos jogam nas mesmas condições. Há três modalidades: 1X1, 2X2 e 4X4, cada uma com uma experiência diferente, valorizando habilidade, comunicação e trabalho em equipe.</p>
+            <h4 style="color: #fff; font-size: 13px; margin: 14px 0 7px;">IGUALDADE ENTRE OS JOGADORES</h4>
+            <p style="margin-bottom: 12px;">Não existem benefícios pagos ou gratuitos, VIPs ou privilégios que coloquem algum jogador em vantagem. Tudo é pensado para que todos compitam em igualdade. Seja algo pago ou gratuito, nada disso gera vantagem dentro das partidas. O resultado depende do desempenho de cada jogador.</p>
+            <p style="margin-bottom: 12px;">Armas e mecânicas são ajustadas para manter uma gameplay equilibrada e agradável, com melhorias e correções quando necessário. A experiência de jogo busca ser simples, rápida e divertida, fazendo com que o jogador realmente aproveite as partidas e tenha vontade de voltar a jogar novamente, até mesmo no dia seguinte, simplesmente porque gostou da experiência proporcionada pelo mapa.</p>
+            <p style="margin-bottom: 12px;">Sugestões dos jogadores são consideradas, mas cada ideia é avaliada com cuidado para não quebrar o equilíbrio do mapa. Atualizações e ajustes podem acontecer sempre que forem necessários para melhorar a experiência e manter a qualidade das partidas.</p>
+            <p style="margin-bottom: 0;">A proposta é manter um espaço de jogo justo, competitivo e divertido, onde todos entram nas mesmas condições, sem pagar, sem VIP e sem benefícios especiais, valorizando principalmente a habilidade, a estratégia e a diversão de jogar.</p>
+        </div>
+        <button class="btn-fechar-modal" onclick="fecharSobreMapa()">Fechar</button>
+    </div>
+</div>
+
+<!-- MODAL MINHAS REDES SOCIAIS -->
+<div id="modalRedesSociais" class="modal">
+    <div class="modal-content">
+        <h3>MINHAS REDES SOCIAIS</h3>
+
+        <div style="font-size: 12.5px; color: var(--text-secondary); max-height: 65vh; overflow-y: auto; padding-right: 4px;">
+            <a class="social-item" href="https://www.instagram.com/moreno_nyx/" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-instagram"></i>
+                <span>Instagram</span>
+            </a>
+
+            <a class="social-item" href="https://www.tiktok.com/@moreno_nyx" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-tiktok"></i>
+                <span>TikTok</span>
+            </a>
+
+            <div class="social-section-title">Outras redes</div>
+
+            <button class="social-item disabled" onclick="mostrarRedeIndisponivel()">
+                <i class="fa-brands fa-youtube"></i>
+                <span>YouTube</span>
+            </button>
+
+            <button class="social-item disabled" onclick="mostrarRedeIndisponivel()">
+                <i class="fa-brands fa-kickstarter-k"></i>
+                <span>Kwai</span>
+            </button>
+
+            <button class="social-item disabled" onclick="mostrarRedeIndisponivel()">
+                <i class="fa-brands fa-discord"></i>
+                <span>Discord</span>
+            </button>
+
+            <button class="social-item disabled" onclick="mostrarRedeIndisponivel()">
+                <i class="fa-brands fa-twitch"></i>
+                <span>Twitch</span>
+            </button>
+
+            <div id="socialUnavailable" class="social-unavailable">
+                Esta rede social ainda não está disponível. No momento, somente Instagram e TikTok estão funcionando.
+            </div>
+        </div>
+
+        <button class="btn-fechar-modal" onclick="fecharRedesSociais()">Fechar</button>
+    </div>
+</div>
+
+<!-- MODAL -->
+<div id="modalInfo" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle"></h3>
+        <ul id="modalList"></ul>
+        <button class="btn-fechar-modal" onclick="fecharModal()">Fechar</button>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+    // ===== PROTEÇÃO CONTRA CÓPIA MANUAL =====
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+    });
+
+    document.addEventListener('selectstart', function(e) {
+        if (!e.target.closest('input, textarea')) {
+            e.preventDefault();
+        }
+    });
+
+    document.addEventListener('dragstart', function(e) {
+        e.preventDefault();
+    });
+
+    document.addEventListener('copy', function(e) {
+        // A cópia permitida pelo site acontece exclusivamente pelo botão "Copiar".
+        if (!e.target.closest('.btn-copy')) {
+            e.preventDefault();
+        }
+    });
+
+    document.addEventListener('cut', function(e) {
+        e.preventDefault();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        const key = e.key.toLowerCase();
+        const isCopyShortcut = (e.ctrlKey || e.metaKey) && (key === 'c' || key === 'x');
+        const isSaveShortcut = (e.ctrlKey || e.metaKey) && key === 's';
+
+        if (isCopyShortcut || isSaveShortcut) {
+            // Permite Ctrl+C normalmente dentro da pesquisa/campos de texto.
+            if (e.target.closest('input, textarea') && isCopyShortcut) {
+                return;
+            }
+            e.preventDefault();
+        }
+    });
+
+    // ===== MENU LATERAL =====
+    function abrirMenu() {
+        document.getElementById('sideMenu').classList.add('open');
+        document.getElementById('sideOverlay').classList.add('open');
+    }
+
+    function fecharMenu() {
+        document.getElementById('sideMenu').classList.remove('open');
+        document.getElementById('sideOverlay').classList.remove('open');
+    }
+
+    // ===== PESQUISA =====
+    function filtrarConteudo() {
+        const termo = document.getElementById('searchInput').value.toLowerCase().trim();
+        const itens = document.querySelectorAll('.searchable-item');
+        let visiveis = 0;
+
+        itens.forEach(item => {
+            const nome = (item.getAttribute('data-nome') || '').toLowerCase();
+            const titulo = (item.querySelector('h2')?.innerText || '').toLowerCase();
+            const match = !termo || nome.includes(termo) || titulo.includes(termo);
+
+            if (match) {
+                item.style.display = 'flex';
+                visiveis++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        document.getElementById('emptyState').classList.toggle('show', visiveis === 0);
+        document.getElementById('mapsList').style.display = visiveis === 0 ? 'none' : 'flex';
+    }
+
+    // ===== COPIAR =====
+    function copiarCodigo(btn, codigo) {
+        navigator.clipboard.writeText(codigo).then(() => {
+            const original = btn.innerHTML;
+            btn.classList.add('copied');
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!';
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.innerHTML = original;
+            }, 1800);
+        }).catch(() => {
+            const ta = document.createElement('textarea');
+            ta.value = codigo;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copiar';
+            }, 1800);
+        });
+    }
+
+    // ===== SOBRE O MAPA =====
+    function abrirSobreMapa() {
+        fecharMenu();
+        const modal = document.getElementById('modalSobreMapa');
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => modal.classList.add('show'));
+    }
+
+    function fecharSobreMapa() {
+        const modal = document.getElementById('modalSobreMapa');
+        modal.classList.remove('show');
+        setTimeout(() => { modal.style.display = 'none'; }, 220);
+    }
+
+    document.getElementById('modalSobreMapa').addEventListener('click', function(e) {
+        if (e.target === this) fecharSobreMapa();
+    });
+
+    // ===== FEEDBACK E REDES SOCIAIS =====
+    function abrirInstagramFeedback() {
+        fecharMenu();
+        window.open('https://www.instagram.com/moreno_nyx/', '_blank', 'noopener,noreferrer');
+    }
+
+    function abrirRedesSociais() {
+        fecharMenu();
+        const modal = document.getElementById('modalRedesSociais');
+        const aviso = document.getElementById('socialUnavailable');
+        aviso.classList.remove('show');
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => modal.classList.add('show'));
+    }
+
+    function fecharRedesSociais() {
+        const modal = document.getElementById('modalRedesSociais');
+        modal.classList.remove('show');
+        setTimeout(() => { modal.style.display = 'none'; }, 220);
+    }
+
+    function mostrarRedeIndisponivel() {
+        const aviso = document.getElementById('socialUnavailable');
+        aviso.classList.add('show');
+        clearTimeout(window.socialUnavailableTimer);
+        window.socialUnavailableTimer = setTimeout(() => {
+            aviso.classList.remove('show');
+        }, 3000);
+    }
+
+    document.getElementById('modalRedesSociais').addEventListener('click', function(e) {
+        if (e.target === this) fecharRedesSociais();
+    });
+
+    // ===== MODAL =====
+    function abrirInfo(titulo, detalhes) {
+        document.getElementById('modalTitle').innerText = titulo;
+        const lista = document.getElementById('modalList');
+        lista.innerHTML = '';
+        detalhes.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `<i class="fa-solid fa-check"></i><span>${item}</span>`;
+            lista.appendChild(li);
+        });
+        const modal = document.getElementById('modalInfo');
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => modal.classList.add('show'));
+    }
+
+    function fecharModal() {
+        const modal = document.getElementById('modalInfo');
+        modal.classList.remove('show');
+        setTimeout(() => { modal.style.display = 'none'; }, 220);
+    }
+
+    document.getElementById('modalInfo').addEventListener('click', function(e) {
+        if (e.target === this) fecharModal();
+    });
+
+    // ===== TOAST =====
+    let toastTimer = null;
+    function mostrarToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+</script>
+
+</body>
+</html>
